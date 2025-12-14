@@ -3,29 +3,98 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fluid Player VAST test (localhost)</title>
+  <title>Video.js + VAST (pre + co 10s + post) + licznik</title>
 
-  <link rel="stylesheet" href="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css">
-  <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.1/video-js.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.6.1/video.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-ads/7.3.2/videojs.ads.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-ads/7.3.2/videojs.ads.min.js"></script>
+
+  <link rel="stylesheet" href="https://raw.githack.com/philipwatson/videojsx-vast-plugin/master/dist/videojsx.vast.css">
+  <script src="https://raw.githack.com/philipwatson/videojsx-vast-plugin/master/dist/videojsx.vast.js"></script>
+
+  <style>
+    body { margin: 20px; font-family: system-ui, Arial, sans-serif; }
+    .video-js { max-width: 100%; }
+    .ad-remaining {
+      position: absolute; top: 10px; right: 10px; z-index: 9999;
+      background: rgba(0,0,0,.75); color: #fff; padding: 6px 10px;
+      border-radius: 6px; font-size: 14px; line-height: 1;
+      display: none; pointer-events: none;
+    }
+  </style>
 </head>
 <body>
 
-  <video id="my-video" controls playsinline preload="metadata">
+  <video
+    id="vid1"
+    class="video-js vjs-default-skin"
+    width="711"
+    height="400"
+    controls
+    preload="auto"
+    playsinline
+    data-setup='{"autoplay": false}'
+  >
     <source src="sample.mp4" type="video/mp4" />
   </video>
 
   <script>
-    fluidPlayer('my-video', {
-      vastOptions: {
-        adList: [
-          {
-            roll: 'preRoll',
-            vastTag: 'https://plumprush.com/d.msFazLdOGaN/v_ZYGtUF/TeImQ9xugZiUYlBkIPhTDYR3XMFjSYP4MNgjPAqtUNRjhc/yLNRj/gK2dMuQz'
-          }
-        ]
-      }
+    const VAST_URL = "https://plumprush.com/d.msFazLdOGaN/v_ZYGtUF/TeImQ9xugZiUYlBkIPhTDYR3XMFjSYP4MNgjPAqtUNRjhc/yLNRj/gK2dMuQz";
+    const player = videojs('vid1');
+
+    // Overlay z czasem reklamy
+    const overlay = document.createElement('div');
+    overlay.className = 'ad-remaining';
+    overlay.textContent = 'Reklama…';
+    player.el().appendChild(overlay);
+
+    let adTimerId = null;
+    function stopAdTimer() { if (adTimerId) { clearInterval(adTimerId); adTimerId = null; } }
+    function startAdTimer() {
+      stopAdTimer();
+      overlay.style.display = 'block';
+      adTimerId = setInterval(() => {
+        const d = player.duration();
+        const t = player.currentTime();
+        if (!Number.isFinite(d) || d <= 0 || !Number.isFinite(t) || t < 0) {
+          overlay.textContent = 'Reklama…';
+          return;
+        }
+        overlay.textContent = `Reklama: pozostało ${Math.max(0, Math.ceil(d - t))}s`;
+      }, 250);
+    }
+
+    player.on('adstart', startAdTimer);
+    player.on('adend', () => { stopAdTimer(); overlay.style.display = 'none'; });
+    player.on('adskip', () => { stopAdTimer(); overlay.style.display = 'none'; });
+    player.on('adserror', () => { stopAdTimer(); overlay.style.display = 'none'; });
+
+    // Harmonogram: pre-roll, potem co 10s, i post-roll na końcu.
+    // Uwaga: jeśli film jest krótki, część mid-rolli się nie załapie.
+    const schedule = [{ url: VAST_URL, offset: 'pre' }];
+
+    // Mid-rolle co 10 sekund (10, 20, 30, ... do 300s)
+    // Jeśli chcesz więcej lub mniej, zmień MAX_SECONDS.
+    const STEP = 10;
+    const MAX_SECONDS = 300;
+
+    for (let t = STEP; t <= MAX_SECONDS; t += STEP) {
+      schedule.push({ url: VAST_URL, offset: t });
+    }
+
+    schedule.push({ url: VAST_URL, offset: 'post' });
+
+    player.vast({
+      schedule,
+      wrapperLimit: 10,
+      withCredentials: true,
+      controlsEnabled: false,
+      seekEnabled: false,
+      skip: 0
     });
   </script>
-  <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+
 </body>
 </html>
