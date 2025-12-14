@@ -6,12 +6,44 @@
   <title>HilltopAds | adsnetwork-test</title>
   <meta name="ae8a2e202fb600bc4c6d7e8a9801cb6719d31113" content="ae8a2e202fb600bc4c6d7e8a9801cb6719d31113" />
   <meta name="referrer" content="no-referrer-when-downgrade" />
+    <!-- Fluid Player (CDN) -->
+  <link rel="stylesheet" href="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css">
+  <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+
+  
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    video { width: 100%; height: auto; background: #000; }
+    .note { font-size: 14px; opacity: 0.85; }
+    code { word-break: break-all; }
+  </style>
 </head>
 <body>
   <h1>HilltopAds</h1>
   <p>To jest podstrona testowa dla HilltopAds.</p>
 
   <p><a href="../index.html">← Wróć do strony głównej</a></p>
+  <br><br>
+  <div class="wrap">
+    <h1>Fluid Player + VAST (test)</h1>
+
+    <p class="note">
+      Jeśli masz włączone blokowanie reklam, test może nie odpalić. Najlepiej sprawdzać w oknie prywatnym
+      albo z wyłączonym adblockiem dla tej domeny.
+    </p>
+
+    <video id="video1" controls playsinline preload="metadata">
+      <!-- Podmień na swój plik MP4 (musi istnieć, żeby player miał co odtworzyć) -->
+      <source src="sample.mp4" type="video/mp4" />
+      Twoja przeglądarka nie obsługuje HTML5 video.
+    </video>
+
+    <p class="note">
+      VAST tag: <code id="vastTagShown"></code>
+    </p>
+  </div>
+  <br><br>
   <script>
 (function(ieslq){
 var d = document,
@@ -24,5 +56,33 @@ s.referrerPolicy = 'no-referrer-when-downgrade';
 l.parentNode.insertBefore(s, l);
 })({})
 </script>
+    <script>
+    // 1) Wklej tutaj swój VAST Tag URL z sieci
+    const VAST_TAG_URL = "VAST_TAG_URL_TUTAJ";
+
+    document.getElementById("vastTagShown").textContent = VAST_TAG_URL;
+
+    // 2) Inicjalizacja Fluid Player z reklamą pre-roll (przed filmem)
+    fluidPlayer("video1", {
+      layoutControls: {
+        // ustawienia UI (minimalnie)
+        fillToContainer: true,
+        autoplay: false,
+        preload: "metadata"
+      },
+      vastOptions: {
+        // Pre-roll
+        adList: [
+          {
+            roll: "preRoll",
+            vastTag: VAST_TAG_URL
+          }
+        ],
+
+        // Jeśli Twoja sieć obsługuje VPAID, zwykle i tak lepiej testować VAST bez VPAID na start.
+        // Jeżeli reklamy nie startują, czasem pomaga wymuszenie VAST-only w ustawieniach (zależy od wersji).
+      }
+    });
+  </script>
 </body>
 </html>
