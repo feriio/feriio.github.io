@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fluid Player VAST test (localhost)</title>
+
+  <link rel="stylesheet" href="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.css">
+  <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+</head>
+<body>
+
+  <video id="my-video" controls playsinline preload="metadata">
+    <source src="sample.mp4" type="video/mp4" />
+  </video>
+
+  <script>
+    fluidPlayer('my-video', {
+      vastOptions: {
+        adList: [
+          {
+            roll: 'preRoll',
+            vastTag: 'https://plumprush.com/d.msFazLdOGaN/v_ZYGtUF/TeImQ9xugZiUYlBkIPhTDYR3XMFjSYP4MNgjPAqtUNRjhc/yLNRj/gK2dMuQz'
+          }
+        ]
+      }
+    });
+  </script>
+  <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+</body>
+</html>
